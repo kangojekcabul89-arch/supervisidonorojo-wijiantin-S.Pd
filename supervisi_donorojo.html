@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Supervisi Sekolah Binaan - Kec. Donorojo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-emerald-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-3 md:mb-0">
+                <div class="bg-white text-emerald-800 p-3 rounded-full font-bold text-xl shadow">
+                    <i class="fa-solid fa-school-flag"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-wide">SI-SUPERVISI DONOROJO</h1>
+                    <p class="text-xs text-emerald-200">Pengawas: Wijiatin, S.Pd. (NIP. 198406162008012004)</p>
+                </div>
+            </div>
+            <div id="userStatus" class="hidden flex items-center space-x-3 bg-emerald-900 px-4 py-2 rounded-lg text-sm border border-emerald-700">
+                <span id="userInfo" class="font-medium"></span>
+                <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded text-xs transition"><i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        <!-- Login Section -->
+        <section id="loginSection" class="max-w-md mx-auto bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden my-8">
+            <div class="bg-emerald-700 text-white p-6 text-center">
+                <h2 class="text-xl font-bold">LOGIN APLIKASI SUPERVISI</h2>
+                <p class="text-xs text-emerald-100 mt-1">Kecamatan Donorojo, Kabupaten Pacitan</p>
+            </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Pilih Peran Akses</label>
+                    <select id="loginRole" onchange="toggleRoleInput()" class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-slate-50">
+                        <option value="kepsek">Kepala Sekolah Binaan</option>
+                        <option value="pengawas">Pengawas Sekolah</option>
+                    </select>
+                </div>
+
+                <div id="kepsekGroup">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Pilih Sekolah & NPSN</label>
+                    <select id="selectNpsn" class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-slate-50">
+                        <!-- Filled by JS -->
+                    </select>
+                </div>
+
+                <div id="pengawasGroup" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Password Pengawas</label>
+                    <input type="password" id="pengawasPassword" placeholder="Masukkan Password (12345)" class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                </div>
+
+                <button onclick="processLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>MASUK APLIKASI</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Dashboard Sekolah (Kepala Sekolah) -->
+        <section id="kepsekDashboard" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Panel Kepala Sekolah</span>
+                    <h2 id="schoolTitle" class="text-2xl font-bold text-slate-800 mt-2">Nama Sekolah</h2>
+                    <p id="schoolMeta" class="text-xs text-slate-500 mt-1">NPSN: - | Alamat: -</p>
+                </div>
+                <div class="bg-slate-100 p-3 rounded-lg text-xs space-y-1">
+                    <div><b>Kepala Sekolah:</b> <span id="schoolKepsek">-</span></div>
+                    <div><b>Jumlah Guru:</b> <span id="schoolGuru">-</span> Orang</div>
+                </div>
+            </div>
+
+            <!-- Form Supervisi & Pembelajaran Mendalam -->
+            <div class="bg-white rounded-xl shadow border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-emerald-800 mb-4 pb-2 border-b flex items-center">
+                    <i class="fa-solid fa-clipboard-list mr-2"></i> Form Input Supervisi & Pembelajaran Mendalam (Deep Learning)
+                </h3>
+                <form id="supervisionForm" onsubmit="saveSupervision(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Pelaksanaan Supervisi</label>
+                            <input type="date" id="supTanggal" required class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Fokus Utama Pembelajaran Mendalam</label>
+                            <select id="supFokus" required class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                                <option value="Mindful Learning (Kesadaran Penuh)">Mindful Learning (Kesadaran Penuh)</option>
+                                <option value="Meaningful Learning (Bermakna)">Meaningful Learning (Bermakna)</option>
+                                <option value="Joyful Learning (Menyenangkan & Partisipatif)">Joyful Learning (Menyenangkan & Partisipatif)</option>
+                                <option value="Integrasi Profil Pelajar Pancasila">Integrasi Profil Pelajar Pancasila</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Skor Perencanaan Pembelajaran (1-100)</label>
+                            <input type="number" id="supSkor1" min="1" max="100" required placeholder="Contoh: 85" class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Skor Pelaksanaan & Deep Learning (1-100)</label>
+                            <input type="number" id="supSkor2" min="1" max="100" required placeholder="Contoh: 90" class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Skor Evaluasi & Asesmen (1-100)</label>
+                            <input type="number" id="supSkor3" min="1" max="100" required placeholder="Contoh: 88" class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Hasil Supervisi / Temuan</label>
+                        <textarea id="supCatatan" rows="3" required placeholder="Tuliskan catatan hasil supervisi kelas atau observasi pembelajaran..." class="w-full p-2.5 border rounded-lg text-sm bg-slate-50"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Rencana Tindak Lanjut (RTL)</label>
+                            <textarea id="supTindakLanjut" rows="2" required placeholder="Langkah perbaikan / pendampingan ke depan..." class="w-full p-2.5 border rounded-lg text-sm bg-slate-50"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Link Tautan Upload Dokumentasi (Google Drive / Foto / Video)</label>
+                            <input type="url" id="supLink" required placeholder="https://drive.google.com/..." class="w-full p-2.5 border rounded-lg text-sm bg-slate-50">
+                            <p class="text-[11px] text-slate-500 mt-1">Pastikan link Google Drive sudah diatur publik/dapat diakses.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>SIMPAN DATA SUPERVISI</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Riwayat Input Sekolah Ini -->
+            <div class="bg-white rounded-xl shadow border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b">Riwayat Supervisi Sekolah Ini</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3">Fokus Pembelajaran</th>
+                                <th class="p-3 text-center">Rata-Rata Skor</th>
+                                <th class="p-3">Tindak Lanjut</th>
+                                <th class="p-3 text-center">Dokumentasi</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schoolHistoryTable">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Pengawas -->
+        <section id="pengawasDashboard" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow border border-slate-200 flex items-center space-x-4">
+                    <div class="bg-emerald-100 text-emerald-800 p-4 rounded-xl text-xl font-bold"><i class="fa-solid fa-school"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Total Sekolah Binaan</p>
+                        <h3 class="text-2xl font-bold text-slate-800">33 Sekolah</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow border border-slate-200 flex items-center space-x-4">
+                    <div class="bg-blue-100 text-blue-800 p-4 rounded-xl text-xl font-bold"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Sudah Disupervisi</p>
+                        <h3 id="statSubCount" class="text-2xl font-bold text-slate-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow border border-slate-200 flex items-center space-x-4">
+                    <div class="bg-amber-100 text-amber-800 p-4 rounded-xl text-xl font-bold"><i class="fa-solid fa-chart-line"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Rata-Rata Nilai Keseluruhan</p>
+                        <h3 id="statAvgScore" class="text-2xl font-bold text-slate-800">0.0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Monitoring Seluruh Sekolah -->
+            <div class="bg-white rounded-xl shadow border border-slate-200 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 pb-2 border-b gap-3">
+                    <h3 class="text-lg font-bold text-emerald-800"><i class="fa-solid fa-table-list mr-2"></i> Rekapitulasi Real-Time 33 Sekolah Binaan</h3>
+                    <div class="flex space-x-2 w-full md:w-auto">
+                        <input type="text" id="searchSchool" onkeyup="filterSchools()" placeholder="Cari nama sekolah / NPSN..." class="px-3 py-2 border rounded-lg text-sm w-full md:w-64 bg-slate-50">
+                        <button onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-1 whitespace-nowrap">
+                            <i class="fa-solid fa-download"></i> <span>Export Data</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">No</th>
+                                <th class="p-3">Nama Sekolah & NPSN</th>
+                                <th class="p-3">Kepala Sekolah</th>
+                                <th class="p-3 text-center">Status Supervisi</th>
+                                <th class="p-3 text-center">Skor Rata-Rata</th>
+                                <th class="p-3">Fokus Deep Learning</th>
+                                <th class="p-3 text-center">Link Dok.</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="masterTableBody">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        <p>Aplikasi Pengawasan Sekolah Binaan &copy; 2026 | Pengawas: Wijiatin, S.Pd. - Kec. Donorojo, Kab. Pacitan</p>
+    </footer>
+
+    <!-- Script Aplikasi -->
+    <script>
+        const sekolahData = [
+            { no: 1, nama: "SD Negeri 1 Belah", npsn: "20511270", alamat: "Jl. Donorojo-Kalak Dsn. Nglebeng Ds. Belah", kepsek: "Dati Maryatun, S.Pd.,M.M", email: "datimaryatun67@gmail.com", guru: 6, murid: 100 },
+            { no: 2, nama: "SD Negeri 1 Cemeng", npsn: "20511500", alamat: "JL. Pawonsari, RT.01/RW.02 Dusun Krajan", kepsek: "Restu Widianto, S.Pd", email: "restuwidianto2020@gmail.com", guru: 7, murid: 43 },
+            { no: 3, nama: "SD Negeri 1 Gendaran", npsn: "20511539", alamat: "Jl. Pawonsari Dusun Krajan, Desa Gendaran", kepsek: "Dewi Rahayu, S. Pd. SD", email: "dewirahayu2284@gmail.com", guru: 7, murid: 64 },
+            { no: 4, nama: "SD Negeri 1 Klepu", npsn: "20551732", alamat: "RT 01 RW 05 Dsn. Dilem, Ds Klepu", kepsek: "Susi Retnowati, S.Pd.SD", email: "susi_retnowati54@yahoo.com", guru: 7, murid: 88 },
+            { no: 5, nama: "SD Negeri 1 Sekar", npsn: "20510784", alamat: "Jl.Pawonsari No.15 Krajan Lor Desa Sekar", kepsek: "Tutik Endarwati,S.Pd", email: "tutikendarwati62@gmail.com", guru: 8, murid: 44 },
+            { no: 6, nama: "SD Negeri 1 Sukodono", npsn: "20510812", alamat: "Jl.Pawonsari No.19 Desa Sukodono", kepsek: "Ginaryo, S.Pd", email: "ginaryo52@gmail.com", guru: 7, murid: 80 },
+            { no: 7, nama: "SD Negeri 2 Cemeng", npsn: "20511499", alamat: "Dsn. Jelok, Ds. Cemeng", kepsek: "Suroto, S. Pd. SD", email: "surotosingkil@gmail.com", guru: 7, murid: 34 },
+            { no: 8, nama: "SD Negeri 2 Gedompol", npsn: "20511477", alamat: "Jl.Cemeng_Widoro Dusun Karangtalun", kepsek: "Wahyono, S.Pd.SD", email: "wohyonorini81@gmail.com", guru: 8, murid: 44 },
+            { no: 9, nama: "SD Negeri 2 Gendaran", npsn: "20511547", alamat: "RT 01 RW 08 Dsn. Tumpak, Ds. Gendaran", kepsek: "Sumarsini, S.Pd.SD", email: "marsiniae3686@gmail.com", guru: 7, murid: 35 },
+            { no: 10, nama: "SD Negeri 2 Sukodono", npsn: "20510820", alamat: "Jl.Donorojo - kalak Dusun Gedangan", kepsek: "Atik Kuswinarni,S.Pd", email: "atikkus75@gmail.com", guru: 8, murid: 30 },
+            { no: 11, nama: "SD Negeri 2 Widoro", npsn: "20510842", alamat: "Jl. Widoro Krajan", kepsek: "Puji Rahayu, S.Pd.SD", email: "pujirahayu0701@gmail.com", guru: 7, murid: 41 },
+            { no: 12, nama: "SD Negeri 3 Gendaran", npsn: "20511538", alamat: "Dsn. Krajan Ds. Gendaran", kepsek: "Suwarni, S.Pd.SD", email: "suwarni23101968@gmail.com", guru: 7, murid: 35 },
+            { no: 13, nama: "SD Negeri 3 Sukodono", npsn: "20510825", alamat: "Dusun Krajan Desa Sukodono", kepsek: "Suharti, S.Pd", email: "suharti07061972@gmail.com", guru: 6, murid: 43 },
+            { no: 14, nama: "SD Negeri 3 Widoro", npsn: "20510839", alamat: "Dusun Krajan Desa Widoro", kepsek: "Yoyok Hartono, S.Pd", email: "yoyokhartono26@gmail.com", guru: 7, murid: 30 },
+            { no: 15, nama: "SD Negeri 4 Sukodono", npsn: "20510832", alamat: "Dusun Gayam Desa Sukodono", kepsek: "Slamet Riyanto, S.Pd", email: "slametriyanto327@gmail.com", guru: 8, murid: 59 },
+            { no: 16, nama: "SD Negeri Belik", npsn: "20511269", alamat: "Ds. Belik Kec. Donorojo", kepsek: "Sujono, S.Pd.SD", email: "sujono.belik@gmail.com", guru: 7, murid: 93 },
+            { no: 17, nama: "SD Negeri Candi", npsn: "20511475", alamat: "Ds. Candi Kec. Donorojo", kepsek: "Sutrisno, S.Pd", email: "sutrisnocandi76@gmail.com", guru: 7, murid: 69 },
+            { no: 18, nama: "SD Negeri Donorojo", npsn: "20511452", alamat: "Jl. Raya Donorojo", kepsek: "Agus Santoso, S.Pd", email: "agussantoso.dnr@gmail.com", guru: 9, murid: 120 },
+            { no: 19, nama: "SD Negeri Gedompol 1", npsn: "20511479", alamat: "Dsn. Gedompol Ds. Gedompol", kepsek: "Siti Aminah, S.Pd", email: "sitiaminahgedompol@gmail.com", guru: 7, murid: 50 },
+            { no: 20, nama: "SD Negeri Kalak 1", npsn: "20511634", alamat: "Ds. Kalak Kec. Donorojo", kepsek: "Budi Utomo, S.Pd", email: "budiutomokalak@gmail.com", guru: 8, murid: 110 },
+            { no: 21, nama: "SD Negeri Kalak 2", npsn: "20511633", alamat: "Dsn. Kalak Kidul Ds. Kalak", kepsek: "Sri Wahyuni, S.Pd", email: "sriwahyunikalak2@gmail.com", guru: 7, murid: 65 },
+            { no: 22, nama: "SD Negeri Kalak 3", npsn: "20511632", alamat: "Dsn. Krajan Ds. Kalak", kepsek: "Mulyono, S.Pd", email: "mulyonokalak3@gmail.com", guru: 6, murid: 45 },
+            { no: 23, nama: "SD Negeri Klepu 2", npsn: "20551731", alamat: "Ds. Klepu Kec. Donorojo", kepsek: "Supriyanto, S.Pd", email: "supriyantoklepu@gmail.com", guru: 7, murid: 70 },
+            { no: 24, nama: "SD Negeri Widoro 1", npsn: "20510843", alamat: "Ds. Widoro Kec. Donorojo", kepsek: "Siti Rahmawati, S.Pd", email: "sitirahmawidoro@gmail.com", guru: 8, murid: 85 },
+            { no: 25, nama: "SD Negeri Widoro 4", npsn: "20510838", alamat: "Ds. Widoro Kec. Donorojo", kepsek: "Ahmad Fauzi, S.Pd", email: "ahmadfauziwidoro@gmail.com", guru: 6, murid: 40 },
+            { no: 26, nama: "SD Negeri Sekar 2", npsn: "20510785", alamat: "Ds. Sekar Kec. Donorojo", kepsek: "Nur Hidayah, S.Pd", email: "nurhidayahsekar@gmail.com", guru: 7, murid: 52 },
+            { no: 27, nama: "SD Negeri Sendang", npsn: "20510786", alamat: "Ds. Sendang Kec. Donorojo", kepsek: "Joko Susilo, S.Pd", email: "jokosusilosendang@gmail.com", guru: 7, murid: 60 },
+            { no: 28, nama: "SD Negeri Widoro 5", npsn: "20510837", alamat: "Ds. Widoro Kec. Donorojo", kepsek: "Hartini, S.Pd", email: "hartiniwidoro5@gmail.com", guru: 6, murid: 38 },
+            { no: 29, nama: "SD Negeri Kalak 4", npsn: "20511631", alamat: "Ds. Kalak Kec. Donorojo", kepsek: "Dwi Lestari, S.Pd", email: "dwilestarikalak4@gmail.com", guru: 7, murid: 55 },
+            { no: 30, nama: "SD Negeri Gedompol 3", npsn: "20511478", alamat: "Ds. Gedompol Kec. Donorojo", kepsek: "Slamet Widodo, S.Pd", email: "slametwidodogedompol@gmail.com", guru: 6, murid: 42 },
+            { no: 31, nama: "SD Negeri Gendaran 4", npsn: "20511537", alamat: "Ds. Gendaran Kec. Donorojo", kepsek: "Tuminah, S.Pd", email: "tuminahgendaran@gmail.com", guru: 7, murid: 48 },
+            { no: 32, nama: "SD Negeri Sukodono 5", npsn: "20510833", alamat: "Ds. Sukodono Kec. Donorojo", kepsek: "Siti Maimunah, S.Pd", email: "sitimaimunahsukodono@gmail.com", guru: 7, murid: 50 },
+            { no: 33, nama: "SD Negeri Donorojo 2", npsn: "20511451", alamat: "Ds. Donorojo Kec. Donorojo", kepsek: "Agus Supriyanto, S.Pd", email: "agussupriyantodnr2@gmail.com", guru: 8, murid: 95 }
+        ];
+
+        let activeUser = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const select = document.getElementById("selectNpsn");
+            sekolahData.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s.npsn;
+                opt.textContent = `${s.nama} (NPSN: ${s.npsn})`;
+                select.appendChild(opt);
+            });
+            document.getElementById('supTanggal').valueAsDate = new Date();
+        });
+
+        function toggleRoleInput() {
+            const role = document.getElementById("loginRole").value;
+            if (role === "kepsek") {
+                document.getElementById("kepsekGroup").classList.remove("hidden");
+                document.getElementById("pengawasGroup").classList.add("hidden");
+            } else {
+                document.getElementById("kepsekGroup").classList.add("hidden");
+                document.getElementById("pengawasGroup").classList.remove("hidden");
+            }
+        }
+
+        function processLogin() {
+            const role = document.getElementById("loginRole").value;
+            if (role === "pengawas") {
+                const pass = document.getElementById("pengawasPassword").value;
+                if (pass === "12345") {
+                    activeUser = { role: "pengawas", name: "Wijiatin, S.Pd. (Pengawas)" };
+                    initDashboard();
+                } else {
+                    Swal.fire("Gagal", "Password Pengawas salah! Gunakan: 12345", "error");
+                }
+            } else {
+                const npsn = document.getElementById("selectNpsn").value;
+                const school = sekolahData.find(s => s.npsn === npsn);
+                activeUser = { role: "kepsek", school: school };
+                initDashboard();
+            }
+        }
+
+        function initDashboard() {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("userStatus").classList.remove("hidden");
+            document.getElementById("userInfo").textContent = activeUser.role === "pengawas" ? activeUser.name : activeUser.school.nama;
+
+            if (activeUser.role === "pengawas") {
+                document.getElementById("pengawasDashboard").classList.remove("hidden");
+                renderPengawasDashboard();
+            } else {
+                document.getElementById("kepsekDashboard").classList.remove("hidden");
+                renderKepsekDashboard();
+            }
+        }
+
+        function logout() {
+            activeUser = null;
+            document.getElementById("userStatus").classList.add("hidden");
+            document.getElementById("loginSection").classList.remove("hidden");
+            document.getElementById("pengawasDashboard").classList.add("hidden");
+            document.getElementById("kepsekDashboard").classList.add("hidden");
+            document.getElementById("pengawasPassword").value = "";
+        }
+
+        function getStoredData() {
+            return JSON.parse(localStorage.getItem("supervisi_donorojo_data") || "[]");
+        }
+
+        function saveStoredData(data) {
+            localStorage.setItem("supervisi_donorojo_data", JSON.stringify(data));
+        }
+
+        function renderKepsekDashboard() {
+            const s = activeUser.school;
+            document.getElementById("schoolTitle").textContent = s.nama;
+            document.getElementById("schoolMeta.textContent = `NPSN: ${s.npsn} | Alamat: ${s.alamat}`";
+            document.getElementById("schoolMeta").textContent = `NPSN: ${s.npsn} | Alamat: ${s.alamat}`;
+            document.getElementById("schoolKepsek").textContent = s.kepsek;
+            document.getElementById("schoolGuru").textContent = s.guru;
+            renderKepsekHistory();
+        }
+
+        function saveSupervision(e) {
+            e.preventDefault();
+            const s = activeUser.school;
+            const tanggal = document.getElementById("supTanggal").value;
+            const fokus = document.getElementById("supFokus").value;
+            const skor1 = parseFloat(document.getElementById("supSkor1").value);
+            const skor2 = parseFloat(document.getElementById("supSkor2").value);
+            const skor3 = parseFloat(document.getElementById("supSkor3").value);
+            const rata = ((skor1 + skor2 + skor3) / 3).toFixed(1);
+            const catatan = document.getElementById("supCatatan").value;
+            const tindakLanjut = document.getElementById("supTindakLanjut").value;
+            const link = document.getElementById("supLink").value;
+
+            let allData = getStoredData();
+            // remove existing for this school if any (single active supervision report per school or multiple)
+            // Let's allow multiple or update latest. Here we store an array of records.
+            const newRecord = {
+                id: Date.now(),
+                npsn: s.npsn,
+                namaSekolah: s.nama,
+                tanggal, fokus, skor1, skor2, skor3, rata, catatan, tindakLanjut, link
+            };
+
+            allData.push(newRecord);
+            saveStoredData(allData);
+
+            Swal.fire("Berhasil!", "Data supervisi dan pembelajaran mendalam berhasil disimpan.", "success");
+            document.getElementById("supervisionForm").reset();
+            document.getElementById('supTanggal').valueAsDate = new Date();
+            renderKepsekHistory();
+        }
+
+        function renderKepsekHistory() {
+            const s = activeUser.school;
+            const allData = getStoredData();
+            const schoolDataList = allData.filter(item => item.npsn === s.npsn);
+            const tbody = document.getElementById("schoolHistoryTable");
+            tbody.innerHTML = "";
+
+            if (schoolDataList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data supervisi yang diunggah.</td></tr>`;
+                return;
+            }
+
+            schoolDataList.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3">${item.tanggal}</td>
+                        <td class="p-3 font-medium text-emerald-800">${item.fokus}</td>
+                        <td class="p-3 text-center"><span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-bold text-xs">${item.rata}</span></td>
+                        <td class="p-3">${item.tindakLanjut}</td>
+                        <td class="p-3 text-center"><a href="${item.link}" target="_blank" class="text-blue-600 hover:underline text-xs"><i class="fa-solid fa-link"></i> Buka Link</a></td>
+                        <td class="p-3 text-center"><button onclick="deleteRecord(${item.id})" class="text-rose-600 hover:text-rose-800 text-xs"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteRecord(id) {
+            Swal.fire({
+                title: 'Hapus Data?',
+                text: "Data supervisi ini akan dihapus permanen.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let allData = getStoredData();
+                    allData = allData.filter(item => item.id !== id);
+                    saveStoredData(allData);
+                    renderKepsekHistory();
+                    if(activeUser.role === 'pengawas') renderPengawasDashboard();
+                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                }
+            })
+        }
+
+        function renderPengawasDashboard() {
+            const allData = getStoredData();
+            document.getElementById("statSubCount").textContent = new Set(allData.map(i => i.npsn)).size;
+            
+            if(allData.length > 0) {
+                const totalAvg = allData.reduce((acc, curr) => acc + parseFloat(curr.rata), 0) / allData.length;
+                document.getElementById("statAvgScore").textContent = totalAvg.toFixed(1);
+            } else {
+                document.getElementById("statAvgScore").textContent = "0.0";
+            }
+
+            const tbody = document.getElementById("masterTableBody");
+            tbody.innerHTML = "";
+
+            sekolahData.forEach((s, idx) => {
+                const records = allData.filter(i => i.npsn === s.npsn);
+                const latest = records.length > 0 ? records[records.length - 1] : null;
+
+                const statusBadge = latest 
+                    ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-[11px] font-bold">Sudah (${records.length})</span>`
+                    : `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-[11px] font-bold">Belum</span>`;
+                
+                const avgScore = latest ? latest.rata : "-";
+                const fokusText = latest ? latest.fokus : "-";
+                const linkDoc = latest ? `<a href="${latest.link}" target="_blank" class="text-blue-600 hover:underline font-medium"><i class="fa-solid fa-cloud-arrow-up"></i> Link</a>` : "-";
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 school-row">
+                        <td class="p-3">${idx + 1}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-800">${s.nama}</div>
+                            <div class="text-xs text-slate-500">NPSN: ${s.npsn}</div>
+                        </td>
+                        <td class="p-3 text-xs">${s.kepsek}</td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 text-center font-bold text-emerald-700">${avgScore}</td>
+                        <td class="p-3 text-xs text-slate-600">${fokusText}</td>
+                        <td class="p-3 text-center text-xs">${linkDoc}</td>
+                        <td class="p-3 text-center">
+                            ${latest ? `<button onclick="viewSchoolDetail('${s.npsn}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs"><i class="fa-solid fa-eye"></i> Detail</button>` : `<span class="text-slate-400 text-xs">-</span>`}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterSchools() {
+            const query = document.getElementById("searchSchool").value.toLowerCase();
+            const rows = document.querySelectorAll(".school-row");
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
+        }
+
+        function viewSchoolDetail(npsn) {
+            const school = sekolahData.find(s => s.npsn === npsn);
+            const allData = getStoredData().filter(i => i.npsn === npsn);
+            let html = `<div class="text-left text-xs space-y-3 max-h-[60vh] overflow-y-auto">`;
+            html += `<p><b>Sekolah:</b> ${school.nama} (NPSN: ${school.npsn})</p>`;
+            html += `<p><b>Kepala Sekolah:</b> ${school.kepsek}</p><hr>`;
+            
+            allData.forEach((d, idx) => {
+                html += `
+                    <div class="bg-slate-50 p-3 rounded border space-y-1">
+                        <div><b>Sesi #${idx+1} (${d.tanggal})</b></div>
+                        <div><b>Fokus:</b> ${d.fokus}</div>
+                        <div><b>Nilai Rata-rata:</b> ${d.rata} (Perencanaan: ${d.skor1}, Pelaksanaan: ${d.skor2}, Evaluasi: ${d.skor3})</div>
+                        <div><b>Catatan:</b> ${d.catatan}</div>
+                        <div><b>Tindak Lanjut:</b> ${d.tindakLanjut}</div>
+                        <div><b>Link Dokumentasi:</b> <a href="${d.link}" target="_blank" class="text-blue-600 underline">${d.link}</a></div>
+                        <div class="text-right"><button onclick="deleteRecord(${d.id}); Swal.close();" class="text-rose-600 font-bold hover:underline">Hapus Data Ini</button></div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            Swal.fire({
+                title: `Detail Supervisi: ${school.nama}`,
+                html: html,
+                width: '600px',
+                confirmButtonText: 'Tutup'
+            });
+        }
+
+        function exportData() {
+            const allData = getStoredData();
+            let csv = "No,Nama Sekolah,NPSN,Kepala Sekolah,Tanggal,Fokus Pembelajaran,Skor 1,Skor 2,Skor 3,Nilai Rata-rata,Catatan,Tindak Lanjut,Link Dokumentasi\n";
+            
+            sekolahData.forEach((s, idx) => {
+                const records = allData.filter(i => i.npsn === s.npsn);
+                if(records.length > 0) {
+                    records.forEach(r => {
+                        csv += `"${idx+1}","${s.nama}","${s.npsn}","${s.kepsek}","${r.tanggal}","${r.fokus}","${r.skor1}","${r.skor2}","${r.skor3}","${r.rata}","${r.catatan}","${r.tindakLanjut}","${r.link}"\n`;
+                    });
+                } else {
+                    csv += `"${idx+1}","${s.nama}","${s.npsn}","${s.kepsek}","-","Belum Disupervisi","-","-","-","-","-","-","-"\n`;
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rekap_Supervisi_Donorojo_2026.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
